@@ -8,7 +8,7 @@ const Map = () => {
   return (
     <div
       className='map-view'
-      style={{ height: 'calc(100vh - 43px)' }}
+      style={{ height: 'calc(100vh - 45px)' }}
       ref={mapRef}
     />
   );
