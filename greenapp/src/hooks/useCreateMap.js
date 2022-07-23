@@ -11,6 +11,8 @@ import {
 } from '@esri/calcite-components-react';
 
 // Calcite icons
+import InformationIcon from 'calcite-ui-icons-react/InformationIcon';
+import ExploreIcon from 'calcite-ui-icons-react/ExploreIcon';
 
 const useCreateMap = (mapRef) => {
   useEffect(() => {
@@ -71,12 +73,13 @@ const useCreateMap = (mapRef) => {
 
         const ActionContent = () => {
           return (
-            <CalciteActionBar expanded={true}>
-              <CalciteAction
-                text='information'
-                icon='information'
-                textEnabled
-                onClick={(e) => console.log(e)}></CalciteAction>
+            <CalciteActionBar expandDisabled expanded={true}>
+              <CalciteAction text='Information' onClick={(e) => console.log(e)}>
+                <InformationIcon />
+              </CalciteAction>
+              <CalciteAction text='Nearest Park'>
+                <ExploreIcon />
+              </CalciteAction>
             </CalciteActionBar>
           );
         };
