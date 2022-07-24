@@ -1,3 +1,4 @@
+/* eslint-disable no-loop-func */
 import { loadModules } from 'esri-loader';
 import { useEffect } from 'react';
 import ReactDOM from 'react-dom';
@@ -11,39 +12,51 @@ import {
 } from '@esri/calcite-components-react';
 
 // Calcite icons
-import InformationIcon from 'calcite-ui-icons-react/InformationIcon';
 import ExploreIcon from 'calcite-ui-icons-react/ExploreIcon';
 
 const useCreateMap = (mapRef) => {
   useEffect(() => {
     let view;
+    let map;
+    let graphicsLayer;
+    let mercator;
 
     const initMap = async (mapRef) => {
       try {
         const modules = [
           'esri/Map',
           'esri/views/MapView',
-          'esri/widgets/Directions',
-          'esri/layers/RouteLayer',
-          'esri/rest/support/Stop',
           'esri/Basemap',
           'esri/layers/VectorTileLayer',
+          'esri/layers/GraphicsLayer',
+          'esri/Graphic',
+          'esri/geometry/Point',
+          'esri/rest/support/Query',
+          'esri/rest/query',
+          'esri/geometry/geometryEngine',
+          'esri/geometry/support/webMercatorUtils',
+          'esri/PopupTemplate',
+          'esri/widgets/Search',
+          'esri/layers/FeatureLayer',
         ];
         const [
           Map,
           MapView,
-          Directions,
-          RouteLayer,
-          Stop,
           Basemap,
           VectorTileLayer,
+          GraphicsLayer,
+          Graphic,
+          Point,
+          Query,
+          queryTask,
+          GeometryEngine,
+          WebMercatorUtils,
+          PopupTemplate,
+          Search,
+          FeatureLayer,
         ] = await loadModules(modules);
-        const stops = [
-          new Stop({ geometry: { x: -117.1825, y: 34.054722 } }),
-          new Stop({ geometry: { x: -116.545278, y: 33.830278 } }),
-        ];
-        const routeLayer = new RouteLayer({ stops });
 
+        graphicsLayer = new GraphicsLayer({});
         const basemap = new Basemap({
           baseLayers: [
             new VectorTileLayer({
@@ -56,7 +69,7 @@ const useCreateMap = (mapRef) => {
           id: 'communityBasemap',
         });
 
-        const map = new Map({ basemap: basemap, layers: [routeLayer] });
+        map = new Map({ basemap: basemap, layers: [graphicsLayer] });
         view = new MapView({
           map: map,
           zoom: 12,
@@ -64,32 +77,195 @@ const useCreateMap = (mapRef) => {
           center: [-118.2420936417993, 34.051742101701095],
         });
 
-        const directions = new Directions({
-          view: view,
-          layer: routeLayer,
-          apiKey:
-            'AAPK26c16bc6d0194b058c17d88790c210fc4tUyFEU-dB6L2EcTeey9607RX0mDt00sONmZrFVkbdVo5f9dSflXdWQGNbjPpVPn',
-        });
+        const findNearestPark = async () => {
+          try {
+            document.body.style.cursor = 'wait';
+            const layer =
+              'https://services8.arcgis.com/LLNIdHmmdjO2qQ5q/arcgis/rest/services/County_Parks/FeatureServer/0';
+
+            let result;
+            graphicsLayer.removeAll();
+
+            const locations = [
+              new Point({
+                longitude: '-118.27634385261786',
+                latitude: '34.04663946385921',
+              }),
+              new Point({
+                longitude: '-118.25940636491663',
+                latitude: '33.883888187051305',
+              }),
+              new Point({
+                longitude: '-117.885863932596',
+                latitude: '34.023291386551726',
+              }),
+              new Point({
+                longitude: '-118.53924196690525',
+                latitude: '34.225325851715034',
+              }),
+              new Point({
+                longitude: '-118.17063377037906',
+                latitude: '33.78028851883778',
+              }),
+            ];
+
+            const index = Math.round(Math.random() * (4 - 0) + 0);
+
+            const blueDot = new Graphic({
+              geometry: locations[index],
+              symbol: {
+                type: 'picture-marker',
+                url: 'https://intern-hackathon.maps.arcgis.com/sharing/rest/content/items/165704eda51e402da7d087106237c110/data',
+                width: '32',
+                height: '32',
+              },
+            });
+
+            graphicsLayer.add(blueDot);
+            result = await incrementBuffer(locations[index], layer);
+            mercator = result[1];
+
+            result[0].features.forEach((item) => {
+              const popup = new PopupTemplate({
+                title: item.attributes.PARK_NAME,
+                content: () => {
+                  const div = document.createElement('div');
+                  div.innerHTML = `
+                  <p><b>Address:</b> ${item.attributes.ADDRESS}</p><br/>
+                  <p><b>Phone:</b> ${item.attributes.PHONES}</p><br/>
+                  <p><b>Park condition:</b> ${item.attributes.PRKINF_CND}</p><br/>
+                  <p><b>Park type:</b> ${item.attributes.TYPE}</p><br/>
+                  `;
+                  return div;
+                },
+              });
+              const graphic = new Graphic({
+                geometry: item.geometry,
+                attributes: item.attributes,
+                symbol: {
+                  type: 'picture-marker',
+                  url: 'https://intern-hackathon.maps.arcgis.com/sharing/rest/content/items/223b1132d6c244c4a49718a6132cedf3/data',
+                  width: '32',
+                  height: '32',
+                  yoffset: '16',
+                },
+                popupTemplate: popup,
+              });
+              graphicsLayer.add(graphic);
+            });
+
+            view.extent = mercator.extent;
+            view.center = mercator.extent.center;
+            map.remove(map.findLayerById(graphicsLayer.uid));
+            map.add(graphicsLayer);
+            document.body.style.cursor = 'initial';
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        const queryNearest = async (layer, bufferWebMercatorLayer) => {
+          try {
+            const bufferQuery = new Query();
+            bufferQuery.geometry = bufferWebMercatorLayer;
+            bufferQuery.returnGeometry = true;
+            bufferQuery.outFields = ['*'];
+            return queryTask.executeQueryJSON(layer, bufferQuery);
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        const incrementBuffer = async (location, layer) => {
+          try {
+            let increment = 1000;
+            let length = 0;
+            let result;
+            let bufferLayer;
+            let bufferWebMercatorLayer;
+            while (length < 3) {
+              bufferLayer = GeometryEngine.geodesicBuffer(
+                location,
+                increment,
+                'feet'
+              );
+              bufferWebMercatorLayer =
+                WebMercatorUtils.geographicToWebMercator(bufferLayer);
+              result = await queryNearest(layer, bufferWebMercatorLayer).then(
+                (res) => {
+                  length = res.features.length;
+                  return res;
+                }
+              );
+              increment += 250;
+            }
+
+            return [result, bufferWebMercatorLayer];
+          } catch (error) {
+            console.log(error);
+          }
+        };
 
         const ActionContent = () => {
           return (
-            <CalciteActionBar expandDisabled expanded={true}>
-              <CalciteAction text='Information' onClick={(e) => console.log(e)}>
-                <InformationIcon />
-              </CalciteAction>
-              <CalciteAction text='Nearest Park'>
+            <CalciteActionBar expandDisabled expanded>
+              <CalciteAction onClick={findNearestPark} text='Find Nearest Park'>
                 <ExploreIcon />
               </CalciteAction>
             </CalciteActionBar>
           );
         };
 
+        const source = {
+          layer: new FeatureLayer({
+            url: 'https://services8.arcgis.com/LLNIdHmmdjO2qQ5q/arcgis/rest/services/Parks/FeatureServer/0',
+          }),
+          searchFields: ['PARK_NAME', 'ADDRESS'],
+          displayField: 'PARK_NAME',
+          exactMatch: false,
+          outFields: ['*'],
+          name: 'Parks',
+          placeholder: 'Search for parks',
+          maxCharacters: 2,
+          maxSuggestions: 15,
+          autonavigate: true,
+          popupTemplate: {
+            title: '{PARK_NAME}',
+            content: (feature) => {
+              let div = document.createElement('div');
+              div.id = 'popup-div';
+              div.innerHTML = `
+                <p><b>Address:</b> ${feature.graphic.attributes.ADDRESS}</p><br/>
+                <p><b>Phone:</b> ${feature.graphic.attributes.PHONES}</p><br/>
+                <p><b>Park condition:</b> ${feature.graphic.attributes.PRKINF_CND}</p><br/>
+                <p><b>Park type:</b> ${feature.graphic.attributes.TYPE}</p><br/>`;
+              return div;
+            },
+          },
+          resultSymbol: {
+            type: 'picture-marker',
+            url: 'https://intern-hackathon.maps.arcgis.com/sharing/rest/content/items/223b1132d6c244c4a49718a6132cedf3/data',
+            height: '32',
+            width: '32',
+            yoffset: '16',
+          },
+          resultGraphicEnabled: true,
+          zoomScale: 200,
+        };
+
+        const search = new Search({
+          view: view,
+          sources: [source],
+          activeSourceIndex: 1,
+        });
+
+        view.ui.add(search, 'top-right');
+
         const actions = document.createElement('div');
         ReactDOM.render(<ActionContent />, actions);
 
         view.ui.add(actions, 'top-left');
 
-        view.ui.add(directions, 'top-right');
         view.ui.remove('zoom');
       } catch (error) {
         console.log(error);

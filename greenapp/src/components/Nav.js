@@ -10,6 +10,9 @@ import {
   CalciteTab,
 } from '@esri/calcite-components-react';
 import Map from './Map';
+import SuitabilityMap from './SuitabilityMap';
+import Story from './Story';
+import Dashboard from './Dashboard';
 
 const CSS = {
   tabNav: {
@@ -26,15 +29,17 @@ const Nav = () => {
     <>
       <CalciteTabs>
         <CalciteTabNav slot='tab-nav' style={CSS.tabNav}>
-          <CalciteTabTitle active>Navigate to Green Area</CalciteTabTitle>
-          <CalciteTabTitle>Green Areas Dashboard</CalciteTabTitle>
-          <CalciteTabTitle>Place a Green Area</CalciteTabTitle>
+          <CalciteTabTitle active>Navigate to Green Space</CalciteTabTitle>
+          <CalciteTabTitle>Green Space Optimizer</CalciteTabTitle>
+          <CalciteTabTitle>Optimizer Storymap</CalciteTabTitle>
         </CalciteTabNav>
         <CalciteTab active>{<Map />}</CalciteTab>
         <CalciteTab>
-          <div>Another tab</div>
+          <Dashboard />
         </CalciteTab>
-        <CalciteTab>Third Tab</CalciteTab>
+        <CalciteTab>
+          <Story />
+        </CalciteTab>
       </CalciteTabs>
     </>
   );
