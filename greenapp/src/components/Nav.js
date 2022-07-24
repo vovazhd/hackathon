@@ -10,6 +10,7 @@ import {
   CalciteTab,
 } from '@esri/calcite-components-react';
 import Map from './Map';
+import SuitabilityMap from './SuitabilityMap';
 
 const CSS = {
   tabNav: {
@@ -32,7 +33,7 @@ const Nav = () => {
         </CalciteTabNav>
         <CalciteTab active>{<Map />}</CalciteTab>
         <CalciteTab>
-          <div>Another tab</div>
+          <SuitabilityMap />
         </CalciteTab>
         <CalciteTab>Third Tab</CalciteTab>
       </CalciteTabs>
