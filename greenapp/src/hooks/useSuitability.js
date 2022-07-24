@@ -45,6 +45,8 @@ const useSuitability = (mapRef) => {
     };
 
     initMap(mapRef);
+
+    return () => view?.destroy();
   }, [mapRef]);
 };
 

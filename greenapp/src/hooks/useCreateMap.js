@@ -36,6 +36,8 @@ const useCreateMap = (mapRef) => {
           'esri/geometry/geometryEngine',
           'esri/geometry/support/webMercatorUtils',
           'esri/PopupTemplate',
+          'esri/widgets/Search',
+          'esri/layers/FeatureLayer',
         ];
         const [
           Map,
@@ -50,6 +52,8 @@ const useCreateMap = (mapRef) => {
           GeometryEngine,
           WebMercatorUtils,
           PopupTemplate,
+          Search,
+          FeatureLayer,
         ] = await loadModules(modules);
 
         graphicsLayer = new GraphicsLayer({});
@@ -190,6 +194,42 @@ const useCreateMap = (mapRef) => {
             </CalciteActionBar>
           );
         };
+
+        const source = {
+          layer: new FeatureLayer({
+            url: 'https://services8.arcgis.com/LLNIdHmmdjO2qQ5q/arcgis/rest/services/Parks/FeatureServer/0',
+          }),
+          searchFields: ['PARK_NAME', 'ADDRESS'],
+          displayField: 'PARK_NAME',
+          exactMatch: false,
+          outFields: ['*'],
+          name: 'Parks',
+          placeholder: 'Search for parks',
+          maxCharacters: 2,
+          maxSuggestions: 15,
+          autonavigate: true,
+          popupTemplate: {
+            title: '{PARK_NAME}',
+            content: (feature) => {
+              let div = document.createElement('div');
+              div.id = 'popup-div';
+              div.innerHTML = `
+                <p><b>Address:</b> ${feature.graphic.attributes.ADDRESS}</p><br/>
+                <p><b>Phone:</b> ${feature.graphic.attributes.PHONES}</p><br/>
+                <p><b>Park condition:</b> ${feature.graphic.attributes.PRKINF_CND}</p><br/>
+                <p><b>Park type:</b> ${feature.graphic.attributes.TYPE}</p><br/>`;
+              return div;
+            },
+          },
+        };
+
+        const search = new Search({
+          view: view,
+          sources: [source],
+          activeSourceIndex: 1,
+        });
+
+        view.ui.add(search, 'top-right');
 
         const actions = document.createElement('div');
         ReactDOM.render(<ActionContent />, actions);
