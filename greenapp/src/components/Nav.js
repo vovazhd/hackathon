@@ -10,7 +10,6 @@ import {
   CalciteTab,
 } from '@esri/calcite-components-react';
 import Map from './Map';
-import SuitabilityMap from './SuitabilityMap';
 import Story from './Story';
 import Dashboard from './Dashboard';
 
