@@ -1,6 +1,6 @@
 /* eslint-disable no-loop-func */
 import { loadModules } from 'esri-loader';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 
 // Calcite UI elements
@@ -36,6 +36,7 @@ const useCreateMap = (mapRef) => {
           'esri/rest/query',
           'esri/geometry/geometryEngine',
           'esri/geometry/support/webMercatorUtils',
+          'esri/PopupTemplate',
         ];
         const [
           Map,
@@ -49,6 +50,7 @@ const useCreateMap = (mapRef) => {
           queryTask,
           GeometryEngine,
           WebMercatorUtils,
+          PopupTemplate,
         ] = await loadModules(modules);
 
         graphicsLayer = new GraphicsLayer({});
@@ -74,6 +76,7 @@ const useCreateMap = (mapRef) => {
 
         const findNearestPark = async () => {
           try {
+            document.body.style.cursor = 'wait';
             const layer =
               'https://services8.arcgis.com/LLNIdHmmdjO2qQ5q/arcgis/rest/services/Parks/FeatureServer/0';
 
@@ -84,9 +87,14 @@ const useCreateMap = (mapRef) => {
               longitude: '-118.27634385261786',
               latitude: '34.04663946385921',
             });
-
             const blueDot = new Graphic({
               geometry: locationPoint,
+              symbol: {
+                type: 'picture-marker',
+                url: 'https://intern-hackathon.maps.arcgis.com/sharing/rest/content/items/165704eda51e402da7d087106237c110/data',
+                width: '32',
+                height: '32',
+              },
             });
 
             graphicsLayer.add(blueDot);
@@ -94,23 +102,39 @@ const useCreateMap = (mapRef) => {
             mercator = result[1];
 
             result[0].features.forEach((item) => {
-              console.log(item);
-
+              const popup = new PopupTemplate({
+                title: item.attributes.PARK_NAME,
+                content: () => {
+                  const div = document.createElement('div');
+                  div.innerHTML = `
+                  <p><b>Address:</b> ${item.attributes.ADDRESS}</p><br/>
+                  <p><b>Phone:</b> ${item.attributes.PHONES}</p><br/>
+                  <p><b>Park condition:</b> ${item.attributes.PRKINF_CND}</p><br/>
+                  <p><b>Park type:</b> ${item.attributes.TYPE}</p><br/>
+                  `;
+                  return div;
+                },
+              });
               const graphic = new Graphic({
                 geometry: item.geometry,
                 attributes: item.attributes,
                 symbol: {
-                  type: 'simple-marker',
-                  color: 'green',
+                  type: 'picture-marker',
+                  url: 'https://intern-hackathon.maps.arcgis.com/sharing/rest/content/items/223b1132d6c244c4a49718a6132cedf3/data',
+                  width: '32',
+                  height: '32',
+                  yoffset: '16',
                 },
+                popupTemplate: popup,
               });
               graphicsLayer.add(graphic);
             });
 
             view.extent = mercator.extent;
-            view.center = mercator.center;
+            view.center = mercator.extent.center;
             map.remove(map.findLayerById(graphicsLayer.uid));
             map.add(graphicsLayer);
+            document.body.style.cursor = 'initial';
           } catch (error) {
             console.log(error);
           }
@@ -130,12 +154,12 @@ const useCreateMap = (mapRef) => {
 
         const incrementBuffer = async (location, layer) => {
           try {
-            let increment = 250;
+            let increment = 500;
             let length = 0;
             let result;
             let bufferLayer;
             let bufferWebMercatorLayer;
-            while (length < 1) {
+            while (length < 3) {
               bufferLayer = GeometryEngine.geodesicBuffer(
                 location,
                 increment,
@@ -149,7 +173,7 @@ const useCreateMap = (mapRef) => {
                   return res;
                 }
               );
-              increment += 50;
+              increment += 150;
             }
 
             return [result, bufferWebMercatorLayer];
@@ -160,11 +184,8 @@ const useCreateMap = (mapRef) => {
 
         const ActionContent = () => {
           return (
-            <CalciteActionBar expandDisabled expanded={true}>
-              <CalciteAction text='Information' onClick={(e) => console.log(e)}>
-                <InformationIcon />
-              </CalciteAction>
-              <CalciteAction onClick={findNearestPark} text='Nearest Park'>
+            <CalciteActionBar expanded={false}>
+              <CalciteAction onClick={findNearestPark} text='Find Nearest Park'>
                 <ExploreIcon />
               </CalciteAction>
             </CalciteActionBar>
