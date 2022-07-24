@@ -81,17 +81,38 @@ const useCreateMap = (mapRef) => {
           try {
             document.body.style.cursor = 'wait';
             const layer =
-              'https://services8.arcgis.com/LLNIdHmmdjO2qQ5q/arcgis/rest/services/Parks/FeatureServer/0';
+              'https://services8.arcgis.com/LLNIdHmmdjO2qQ5q/arcgis/rest/services/County_Parks/FeatureServer/0';
 
             let result;
             graphicsLayer.removeAll();
 
-            const locationPoint = new Point({
-              longitude: '-118.27634385261786',
-              latitude: '34.04663946385921',
-            });
+            const locations = [
+              new Point({
+                longitude: '-118.27634385261786',
+                latitude: '34.04663946385921',
+              }),
+              new Point({
+                longitude: '-118.25940636491663',
+                latitude: '33.883888187051305',
+              }),
+              new Point({
+                longitude: '-117.885863932596',
+                latitude: '34.023291386551726',
+              }),
+              new Point({
+                longitude: '-118.53924196690525',
+                latitude: '34.225325851715034',
+              }),
+              new Point({
+                longitude: '-118.17063377037906',
+                latitude: '33.78028851883778',
+              }),
+            ];
+
+            const index = Math.round(Math.random() * (4 - 0) + 0);
+
             const blueDot = new Graphic({
-              geometry: locationPoint,
+              geometry: locations[index],
               symbol: {
                 type: 'picture-marker',
                 url: 'https://intern-hackathon.maps.arcgis.com/sharing/rest/content/items/165704eda51e402da7d087106237c110/data',
@@ -101,7 +122,7 @@ const useCreateMap = (mapRef) => {
             });
 
             graphicsLayer.add(blueDot);
-            result = await incrementBuffer(locationPoint, layer);
+            result = await incrementBuffer(locations[index], layer);
             mercator = result[1];
 
             result[0].features.forEach((item) => {
@@ -157,7 +178,7 @@ const useCreateMap = (mapRef) => {
 
         const incrementBuffer = async (location, layer) => {
           try {
-            let increment = 500;
+            let increment = 1000;
             let length = 0;
             let result;
             let bufferLayer;
@@ -176,7 +197,7 @@ const useCreateMap = (mapRef) => {
                   return res;
                 }
               );
-              increment += 150;
+              increment += 250;
             }
 
             return [result, bufferWebMercatorLayer];
@@ -187,7 +208,7 @@ const useCreateMap = (mapRef) => {
 
         const ActionContent = () => {
           return (
-            <CalciteActionBar expanded={false}>
+            <CalciteActionBar expandDisabled expanded>
               <CalciteAction onClick={findNearestPark} text='Find Nearest Park'>
                 <ExploreIcon />
               </CalciteAction>
@@ -221,6 +242,15 @@ const useCreateMap = (mapRef) => {
               return div;
             },
           },
+          resultSymbol: {
+            type: 'picture-marker',
+            url: 'https://intern-hackathon.maps.arcgis.com/sharing/rest/content/items/223b1132d6c244c4a49718a6132cedf3/data',
+            height: '32',
+            width: '32',
+            yoffset: '16',
+          },
+          resultGraphicEnabled: true,
+          zoomScale: 200,
         };
 
         const search = new Search({

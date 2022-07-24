@@ -17,7 +17,7 @@ const useSuitability = (mapRef) => {
 
         map = new WebMap({
           portalItem: {
-            id: '7b6096d7109643a19c8c2907c37f6034',
+            id: '696122f40a1f4b0abe903f886da9ff70',
           },
         });
 
