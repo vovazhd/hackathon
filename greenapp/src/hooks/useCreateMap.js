@@ -1,6 +1,6 @@
 /* eslint-disable no-loop-func */
 import { loadModules } from 'esri-loader';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 // Calcite UI elements
@@ -12,7 +12,6 @@ import {
 } from '@esri/calcite-components-react';
 
 // Calcite icons
-import InformationIcon from 'calcite-ui-icons-react/InformationIcon';
 import ExploreIcon from 'calcite-ui-icons-react/ExploreIcon';
 
 const useCreateMap = (mapRef) => {
