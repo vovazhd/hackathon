@@ -12,6 +12,7 @@ import {
 import Map from './Map';
 import Story from './Story';
 import Dashboard from './Dashboard';
+import Survey from './Survey';
 
 const CSS = {
   tabNav: {
@@ -31,6 +32,7 @@ const Nav = () => {
           <CalciteTabTitle active>Navigate to Green Space</CalciteTabTitle>
           <CalciteTabTitle>Green Space Optimizer</CalciteTabTitle>
           <CalciteTabTitle>Optimizer Storymap</CalciteTabTitle>
+          <CalciteTabTitle>Feedback</CalciteTabTitle>
         </CalciteTabNav>
         <CalciteTab active>{<Map />}</CalciteTab>
         <CalciteTab>
@@ -38,6 +40,9 @@ const Nav = () => {
         </CalciteTab>
         <CalciteTab>
           <Story />
+        </CalciteTab>
+        <CalciteTab>
+          <Survey />
         </CalciteTab>
       </CalciteTabs>
     </>
