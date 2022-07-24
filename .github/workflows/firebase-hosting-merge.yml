@@ -17,3 +17,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GREEN_SPACE_OPTIMIZER }}'
           channelId: live
           projectId: green-space-optimizer
+          entryPoint: "./greenapp"
