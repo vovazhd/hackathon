@@ -94,6 +94,8 @@ const useCreateMap = (mapRef) => {
             mercator = result[1];
 
             result[0].features.forEach((item) => {
+              console.log(item);
+
               const graphic = new Graphic({
                 geometry: item.geometry,
                 attributes: item.attributes,
@@ -143,13 +145,11 @@ const useCreateMap = (mapRef) => {
                 WebMercatorUtils.geographicToWebMercator(bufferLayer);
               result = await queryNearest(layer, bufferWebMercatorLayer).then(
                 (res) => {
-                  console.log(res);
                   length = res.features.length;
                   return res;
                 }
               );
               increment += 50;
-              console.log(increment);
             }
 
             return [result, bufferWebMercatorLayer];
